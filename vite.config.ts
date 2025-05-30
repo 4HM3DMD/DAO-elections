@@ -12,5 +12,14 @@ export default defineConfig({
   },
   server: {
     port: 3001, // Use a different port to avoid conflict with the main app
+  },
+  preview: {
+    port: 4173, // Default Vite preview port
+    strictPort: true,
+    allowedHosts: [
+      'localhost',
+      '127.0.0.1',
+      'dao-elections.onrender.com' // Add your Render domain here
+    ]
   }
 }) 
