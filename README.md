@@ -1,67 +1,81 @@
-# Standalone Elastos DAO Elections Page
+# Elastos DAO Elections Dashboard
 
-This is a standalone React application containing the Elastos DAO Elections page, extracted from the main ElastosDashboard project.
+A real-time dashboard for tracking Elastos DAO Council Representative elections.
 
-## Project Structure
+## Features
 
+- Real-time election status and countdown
+- Live candidate rankings and vote counts
+- Current and end block height tracking
+- Auto-refresh every 2 minutes
+- Mobile-responsive design
+
+## Tech Stack
+
+- React 18
+- TypeScript
+- Vite
+- TailwindCSS
+- Framer Motion
+- Radix UI
+
+## Prerequisites
+
+- Node.js >= 18.17.0
+- npm >= 9.0.0
+
+## Development
+
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/dao-elections.git
+cd dao-elections
 ```
-standalone-cr-elections-app/
-├── public/
-│   ├── images/
-│   │   └── candidates/  # Candidate images
-│   │   └── vite.svg         # Default Vite logo (can be replaced)
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── ui/          # UI components (Card, Skeleton, Alert, etc.)
-│   │   │   └── CandidateAvatar.tsx
-│   │   ├── pages/
-│   │   │   └── standalone-cr-elections.tsx
-│   │   ├── utils/         # Utility functions (API calls, image handling)
-│   │   │   ├── candidateImages.ts
-│   │   │   ├── elastosApi.ts
-│   │   │   └── essentials.ts
-│   │   └── index.css      # Global styles (Tailwind CSS)
-│   ├── .env             # Environment variables (MANUALLY CREATE THIS FILE)
-│   ├── .gitignore
-│   ├── index.html         # Main HTML file
-│   ├── package.json       # Project dependencies and scripts
-│   ├── tsconfig.json      # TypeScript configuration
-│   ├── tsconfig.node.json # TypeScript configuration for Node.js environment
-│   └── vite.config.ts     # Vite build configuration
-└── README.md          # This file
+
+2. Install dependencies:
+```bash
+npm install
 ```
 
-## Setup
+3. Create a `.env` file:
+```bash
+cp .env.example .env
+```
 
-1.  Install dependencies:
+4. Start the development server:
+```bash
+npm run dev
+```
 
-    ```bash
-    npm install
-    ```
+## Production Build
 
-2.  **Create the `.env` file:** Create a file named `.env` in the project root directory and add the following content:
+1. Build the project:
+```bash
+npm run build
+```
 
-    ```
-    NEXT_PUBLIC_ELA_API_URL=https://api.elastos.io/ela
-    NEXT_PUBLIC_CR_API_URL=https://api.cyberrepublic.org/api
-    ```
+2. Preview the production build:
+```bash
+npm run preview
+```
 
-## Running the Application
+## Deployment
 
-1.  Start the development server:
+The application is configured for deployment on Render.com. The deployment process is automated through the `render.yaml` configuration.
 
-    ```bash
-    npm run dev
-    ```
+### Environment Variables
 
-2.  Open your browser to `http://localhost:3001` (or the port specified in `vite.config.ts`).
+Required environment variables:
+- `NODE_VERSION`: 18.17.0
+- `PORT`: 10000
+- `NODE_ENV`: production
 
-## Building for Production
+## API Endpoints
 
-1.  Build the application:
+The application uses the following APIs:
+- Elastos JSON-RPC API
+- Cyber Republic API
 
-    ```bash
-    npm run build
-    ```
+## License
 
-This will generate the production-ready files in the `dist` directory. 
+MIT 

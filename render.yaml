@@ -2,12 +2,19 @@ services:
   - type: web
     name: dao-elections
     env: node
-    buildCommand: npm install && npm run build
+    buildCommand: npm ci && npm run build
     startCommand: npm start
     envVars:
       - key: NODE_VERSION
         value: 18.17.0
       - key: PORT
         value: 10000
+      - key: NODE_ENV
+        value: production
     healthCheckPath: /
-    autoDeploy: true 
+    autoDeploy: true
+    plan: starter
+    disk:
+      name: tmp
+      mountPath: /tmp
+      sizeGB: 1 
