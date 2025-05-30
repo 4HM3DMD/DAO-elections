@@ -111,147 +111,19 @@ const getCountryName = (locationCode: number): string => {
   return COUNTRIES[locationCode] || `Location ${locationCode}`;
 };
 
-// Timer component
-function ElectionTimer() {
-  const [timeLeft, setTimeLeft] = useState({
-    hours: 0,
-    minutes: 0
-  });
-  const [isVoting, setIsVoting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [termInfo, setTermInfo] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+// Timer component (now receives props)
+interface ElectionTimerProps {
+  timeLeft: { hours: number; minutes: number };
+  isVoting: boolean;
+  error: string | null;
+  termInfo: any; // Consider a more specific type if possible
+  loading: boolean;
+}
 
-  const fetchTermInfo = async () => {
-    try {
-      console.log('Fetching term info from Cyber Republic API...');
-      const response = await fetch('https://api.cyberrepublic.org/api/council/term');
-      if (!response.ok) {
-        throw new Error(`Failed to fetch term information: ${response.status} ${response.statusText}`);
-      }
-      const data = await response.json();
-      console.log('Term info received:', data);
-      setTermInfo(data);
-      return data;
-    } catch (err) {
-      console.error('Error fetching term info:', err);
-      setError('Failed to fetch election status');
-      return null;
-    }
-  };
-
-  const getCRRelatedStage = async () => {
-    try {
-      console.log('Fetching CR stage from JSON-RPC...');
-      const response = await fetch('https://api.elastos.io/ela', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          jsonrpc: "2.0",
-          method: "getcrrelatedstage",
-          params: {},
-          id: 1
-        })
-      });
-      const data = await response.json();
-      console.log('CR stage data received:', data);
-      return data;
-    } catch (err) {
-      console.error('Error fetching CR stage:', err);
-      setError('Failed to fetch election status');
-      return null;
-    }
-  };
-
-  const getCurrentHeight = async () => {
-    try {
-      console.log('Fetching current height from JSON-RPC...');
-      const response = await fetch('https://api.elastos.io/ela', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          jsonrpc: "2.0",
-          method: "getcurrentheight",
-          params: {},
-          id: 1
-        })
-      });
-      const data = await response.json();
-      console.log('Current height received:', data);
-      return data.result;
-    } catch (err) {
-      console.error('Error fetching current height:', err);
-      setError('Failed to fetch blockchain height');
-      return null;
-    }
-  };
-
-  const calculateTimeFromBlocks = (blocks: number) => {
-    // Each block takes approximately 2 minutes
-    const totalMinutes = blocks * 2;
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = Math.floor(totalMinutes % 60);
-    return { hours, minutes };
-  };
-
-  useEffect(() => {
-    const updateTimer = async () => {
-      setLoading(true);
-      try {
-        // First fetch term info from Cyber Republic API
-        const termData = await fetchTermInfo();
-        if (!termData) {
-          console.error('No term data received');
-          return;
-        }
-
-        // Then get blockchain data
-        const stageData = await getCRRelatedStage();
-        if (!stageData || !stageData.result) {
-          console.error('No stage data received:', stageData);
-          return;
-        }
-
-        setIsVoting(stageData.result.invoting);
-        
-        if (stageData.result.invoting) {
-          const currentHeight = await getCurrentHeight();
-          if (!currentHeight) {
-            console.error('No current height received');
-            return;
-          }
-
-          const remainingBlocks = stageData.result.votingendheight - currentHeight;
-          console.log('Remaining blocks:', remainingBlocks);
-          
-          if (remainingBlocks > 0) {
-            const { hours, minutes } = calculateTimeFromBlocks(remainingBlocks);
-            setTimeLeft({ hours, minutes });
-          } else {
-            setTimeLeft({ hours: 0, minutes: 0 });
-          }
-        }
-      } catch (err) {
-        console.error('Error updating timer:', err);
-        setError('Failed to update election timer');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    updateTimer();
-    const interval = setInterval(updateTimer, 60000); // Update every minute
-
-    return () => clearInterval(interval);
-  }, []);
-
+function ElectionTimer({ timeLeft, isVoting, error, termInfo, loading }: ElectionTimerProps) {
   if (loading) {
     return (
-      <div className="w-32 md:w-36 p-4 rounded-lg bg-[#1D2332]/80 border border-[#2D3549] backdrop-blur-sm">
+      <div className="w-32 md:w-36 p-3 rounded-lg bg-[#1D2332]/80 border border-[#2D3549] backdrop-blur-sm flex flex-col items-center justify-center">
         <div className="text-sm text-[#94A3B8]">Loading...</div>
         <div className="text-xs text-[#94A3B8] uppercase tracking-wider mt-1">Election Status</div>
       </div>
@@ -260,16 +132,16 @@ function ElectionTimer() {
 
   if (error) {
     return (
-      <div className="w-32 md:w-36 p-4 rounded-lg bg-[#1D2332]/80 border border-[#2D3549] backdrop-blur-sm">
+      <div className="w-32 md:w-36 p-3 rounded-lg bg-[#1D2332]/80 border border-[#2D3549] backdrop-blur-sm flex flex-col items-center justify-center">
         <div className="text-sm text-red-500">Error</div>
-        <div className="text-xs text-[#94A3B8] uppercase tracking-wider mt-1">Timer Unavailable</div>
+        <div className="text-xs text-[#94A3B8] uppercase tracking-wider mt-1 text-center">Timer Unavailable</div>
       </div>
     );
   }
 
   if (!isVoting) {
     return (
-      <div className="w-32 md:w-36 p-4 rounded-lg bg-[#1D2332]/80 border border-[#2D3549] backdrop-blur-sm">
+      <div className="w-32 md:w-36 p-3 rounded-lg bg-[#1D2332]/80 border border-[#2D3549] backdrop-blur-sm flex flex-col items-center justify-center text-center">
         <div className="text-sm text-[#94A3B8]">
           {termInfo?.status || 'Not in voting period'}
         </div>
@@ -281,8 +153,8 @@ function ElectionTimer() {
   }
 
   return (
-    <div className="w-32 md:w-36 p-4 rounded-lg bg-[#1D2332]/80 border border-[#2D3549] backdrop-blur-sm">
-      <div className="text-3xl font-bold text-white">
+    <div className="w-32 md:w-36 p-3 rounded-lg bg-[#1D2332]/80 border border-[#2D3549] backdrop-blur-sm flex flex-col items-center justify-center">
+      <div className="text-2xl font-bold text-white whitespace-nowrap">
         {timeLeft.hours}h {timeLeft.minutes}m
       </div>
       <div className="text-sm text-[#94A3B8] uppercase tracking-wider mt-1">
@@ -292,30 +164,164 @@ function ElectionTimer() {
   );
 }
 
+// Utility function (moved from Timer component)
+const calculateTimeFromBlocks = (blocks: number) => {
+  // Each block takes approximately 2 minutes
+  const totalMinutes = blocks * 2;
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = Math.floor(totalMinutes % 60);
+  return { hours, minutes };
+};
+
+// API utility functions (moved from Timer component)
+const fetchTermInfo = async () => {
+  try {
+    console.log('Fetching term info from Cyber Republic API...');
+    const response = await fetch('https://api.cyberrepublic.org/api/council/term');
+    if (!response.ok) {
+      throw new Error(`Failed to fetch term information: ${response.status} ${response.statusText}`);
+    }
+    const data = await response.json();
+    console.log('Term info received:', data);
+    return data;
+  } catch (err) {
+    console.error('Error fetching term info:', err);
+    return null;
+  }
+};
+
+const getCRRelatedStage = async () => {
+  try {
+    console.log('Fetching CR stage from JSON-RPC...');
+    const response = await fetch('https://api.elastos.io/ela', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        method: "getcrrelatedstage",
+        params: {},
+        id: 1
+      })
+    });
+    const data = await response.json();
+    console.log('CR stage data received:', data);
+    return data;
+  } catch (err) {
+    console.error('Error fetching CR stage:', err);
+    return null;
+  }
+};
+
+const getCurrentHeight = async () => {
+  try {
+    console.log('Fetching current height from JSON-RPC...');
+    const response = await fetch('https://api.elastos.io/ela', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        method: "getcurrentheight",
+        params: {},
+        id: 1
+      })
+    });
+    const data = await response.json();
+    console.log('Current height received:', data);
+    return data.result;
+  } catch (err) {
+    console.error('Error fetching current height:', err);
+    return null;
+  }
+};
+
 export default function StandaloneCRElections() {
   const [candidates, setCandidates] = useState<CRCandidate[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [loadingCandidates, setLoadingCandidates] = useState(true);
+  const [errorCandidates, setErrorCandidates] = useState<string | null>(null);
 
+  // State lifted from ElectionTimer
+  const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0 });
+  const [isVoting, setIsVoting] = useState(false);
+  const [errorTimer, setErrorTimer] = useState<string | null>(null);
+  const [termInfo, setTermInfo] = useState<any>(null);
+  const [loadingTimer, setLoadingTimer] = useState(true);
+
+  // State for block heights
+  const [currentBlockHeight, setCurrentBlockHeight] = useState<number | null>(null);
+  const [endBlockHeight, setEndBlockHeight] = useState<number | null>(null);
+
+  // Combined data loading effect
   useEffect(() => {
-    const loadCandidates = async () => {
+    const loadData = async () => {
+      // Load Candidates
       try {
         console.log('Fetching CR candidates data...');
+        setLoadingCandidates(true);
         const data = await fetchCRCandidates();
         console.log('CR candidates data received:', data);
-        
-        // Sort candidates by votes in descending order
         const sortedCandidates = [...data].sort((a, b) => b.votes - a.votes);
         setCandidates(sortedCandidates);
+        setErrorCandidates(null);
       } catch (err: any) {
-        console.error('Error in CR Elections component:', err);
-        setError(err?.message || 'Failed to load candidates. Please try again later.');
+        console.error('Error fetching candidates:', err);
+        setErrorCandidates(err?.message || 'Failed to load candidates.');
       } finally {
-        setLoading(false);
+        setLoadingCandidates(false);
+      }
+
+      // Load Election Stage and Height
+      try {
+        setLoadingTimer(true);
+        const termData = await fetchTermInfo();
+        if (!termData) {
+          console.error('No term data received');
+          setErrorTimer('Failed to fetch election status');
+          return;
+        }
+        setTermInfo(termData);
+
+        const stageData = await getCRRelatedStage();
+        if (!stageData || !stageData.result) {
+          console.error('No stage data received:', stageData);
+          setErrorTimer('Failed to fetch election status');
+          return;
+        }
+        setIsVoting(stageData.result.invoting);
+        setEndBlockHeight(stageData.result.votingendheight);
+
+        const currentHeight = await getCurrentHeight();
+        if (!currentHeight) {
+          console.error('No current height received');
+          setErrorTimer('Failed to fetch blockchain height');
+          return;
+        }
+        setCurrentBlockHeight(currentHeight);
+
+        if (stageData.result.invoting && stageData.result.votingendheight && currentHeight) {
+          const remainingBlocks = stageData.result.votingendheight - currentHeight;
+          console.log('Remaining blocks:', remainingBlocks);
+          const time = calculateTimeFromBlocks(remainingBlocks);
+          setTimeLeft(time);
+        } else {
+          setTimeLeft({ hours: 0, minutes: 0 });
+        }
+        setErrorTimer(null);
+      } catch (err) {
+        console.error('Error fetching election data:', err);
+        setErrorTimer('Failed to update election data');
+      } finally {
+        setLoadingTimer(false);
       }
     };
 
-    loadCandidates();
+    loadData(); // Initial load
+    const interval = setInterval(loadData, 120000); // Refresh every 2 minutes (120000 ms)
+
+    return () => clearInterval(interval); // Cleanup on unmount
   }, []);
 
   // Function to format votes with commas and abbreviations
@@ -333,36 +339,19 @@ export default function StandaloneCRElections() {
   const isWinning = (index: number) => index < 12;
 
   // Animation variants
-  const fadeIn = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
-  };
+  const fadeIn = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5 } } };
+  const container = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.05 } } };
+  const item = { hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0, transition: { duration: 0.3 } } };
 
-  const container = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.05
-      }
-    }
-  };
+  const overallError = errorCandidates || errorTimer;
+  const overallLoading = loadingCandidates || loadingTimer;
 
-  const item = {
-    hidden: { opacity: 0, y: 10 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.3 }
-    }
-  };
-
-  if (error) {
+  if (overallError) {
     return (
       <div className="container mx-auto p-6 pt-24 md:pt-28">
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription>{overallError}</AlertDescription>
         </Alert>
       </div>
     );
@@ -391,12 +380,18 @@ export default function StandaloneCRElections() {
                     Council Representative candidates participating in the Elastos ecosystem governance.
                   </p>
                 </div>
-                <ElectionTimer />
+                <ElectionTimer 
+                  timeLeft={timeLeft}
+                  isVoting={isVoting}
+                  error={errorTimer}
+                  termInfo={termInfo}
+                  loading={loadingTimer}
+                />
               </div>
             </div>
             
             {/* Stats Section */}
-            <div className="grid grid-cols-2 gap-3 mb-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
               <div className="p-3 rounded-lg bg-[#1D2332]/80 border border-[#2D3549] backdrop-blur-sm">
                 <div className="text-xl md:text-2xl font-bold text-white">{candidates.length || '—'}</div>
                 <div className="text-xs text-[#94A3B8] uppercase tracking-wider">Total Candidates</div>
@@ -404,10 +399,19 @@ export default function StandaloneCRElections() {
               
               <div className="p-3 rounded-lg bg-[#1D2332]/80 border border-[#2D3549] backdrop-blur-sm">
                 <div className="text-xl md:text-2xl font-bold text-white whitespace-nowrap">
-                  {loading ? '—' : formatVotes(candidates.reduce((sum, c) => sum + c.votes, 0))}
+                  {overallLoading ? '—' : formatVotes(candidates.reduce((sum, c) => sum + c.votes, 0))}
                 </div>
                 <div className="text-xs text-[#94A3B8] uppercase tracking-wider">Total Votes</div>
               </div>
+
+              {isVoting && currentBlockHeight !== null && endBlockHeight !== null && (
+                <div className="p-3 rounded-lg bg-[#1D2332]/80 border border-[#2D3549] backdrop-blur-sm">
+                   <div className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider mb-1">Current Block / End Block</div>
+                  <div className="text-sm text-white whitespace-nowrap">
+                    {currentBlockHeight} / {endBlockHeight}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Election Status */}
@@ -434,7 +438,7 @@ export default function StandaloneCRElections() {
               variants={container}
               className="space-y-2"
             >
-              {loading ? (
+              {overallLoading ? (
                 // Loading skeletons
                 Array.from({ length: 5 }).map((_, index) => (
                   <Skeleton 
